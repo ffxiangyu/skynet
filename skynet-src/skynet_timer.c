@@ -230,6 +230,39 @@ skynet_timeout(uint32_t handle, int time, int session) {
 	return session;
 }
 
+// millisecond: 1/1000 second
+void
+systime_ms(uint32_t *sec, uint32_t *ms) {
+#if !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
+	struct timespec ti;
+	clock_gettime(CLOCK_REALTIME, &ti);
+	*sec = (uint32_t)ti.tv_sec;
+	*cs = (uint32_t)(ti.tv_nsec / 1000000);
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	*sec = tv.tv_sec;
+	*cs = tv.tv_usec / 1000;
+#endif
+}
+
+uint64_t
+gettime_ms() {
+	uint64_t t;
+#if !defined(__APPLE__) || defined(AVAILABLE_MAC_OS_X_VERSION_10_12_AND_LATER)
+	struct timespec ti;
+	clock_gettime(CLOCK_MONOTONIC, &ti);
+	t = (uint64_t)ti.tv_sec * 1000;
+	t += ti.tv_nsec / 1000000;
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	t = (uint64_t)tv.tv_sec * 1000;
+	t += tv.tv_usec / 1000;
+#endif
+	return t;
+}
+
 // centisecond: 1/100 second
 static void
 systime(uint32_t *sec, uint32_t *cs) {

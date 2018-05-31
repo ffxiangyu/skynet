@@ -23,6 +23,11 @@ struct sproto_type;
 #define SPROTO_CB_NIL -2
 #define SPROTO_CB_NOARRAY -3
 
+#define SIZEOF_INT64 ((int)sizeof(uint64_t))
+#define SIZEOF_INT32 ((int)sizeof(uint32_t))
+#define SIZEOF_BOOL ((int)sizeof(bool))
+#define SIZEOF_OBJECT_POINTER ((int)sizeof(char*))
+
 struct sproto * sproto_create(const void * proto, size_t sz);
 void sproto_release(struct sproto *);
 
@@ -48,6 +53,9 @@ struct sproto_arg {
 	int index;	// array base 1
 	int mainindex;	// for map
 	int extra; // SPROTO_TINTEGER: decimal ; SPROTO_TSTRING 0:utf8 string 1:binary
+#ifdef C_SPROTO
+	int c_struct_size; // for struct array to calculate element position
+#endif
 };
 
 typedef int (*sproto_callback)(const struct sproto_arg *args);

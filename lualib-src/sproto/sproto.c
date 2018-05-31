@@ -11,8 +11,6 @@
 #define SIZEOF_LENGTH 4
 #define SIZEOF_HEADER 2
 #define SIZEOF_FIELD 2
-#define SIZEOF_INT64 ((int)sizeof(uint64_t))
-#define SIZEOF_INT32 ((int)sizeof(uint32_t))
 
 struct field {
 	int tag;
@@ -29,6 +27,9 @@ struct sproto_type {
 	int base;
 	int maxn;
 	struct field *f;
+#ifdef C_SPROTO
+	size_t size;
+#endif
 };
 
 struct protocol {
@@ -321,12 +322,30 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	last = -1;
 	t->n = n;
 	t->f = pool_alloc(&s->memory, sizeof(struct field) * n);
+#ifdef C_SPROTO
+	int c_struct_offset = 0;
+#endif
 	for (i=0;i<n;i++) {
 		int tag;
 		struct field *f = &t->f[i];
 		stream = import_field(s, f, stream);
 		if (stream == NULL)
 			return NULL;
+#ifdef C_SPROTO
+		f->c_struct_offset = c_struct_offset;
+		if (SPROTO_TINTEGER == f->type)
+			c_struct_offset += SIZEOF_INT64;
+		else if (SPROTO_TBOOLEAN == f->type)
+			c_struct_offset += SIZEOF_BOOL;
+		else if (SPROTO_TSTRING == f->type)
+			c_struct_offset += SIZEOF_OBJECT_POINTER;
+		else if (SPROTO_TSTRUCT == f->type)
+			c_struct_offset += f->st->size; // this struct is full data
+		else if (SPROTO_TARRAY == f->type)
+			c_struct_offset += SIZEOF_OBJECT_POINTER;
+		else
+			printf("unsupported field type %d", f->type); // error
+#endif
 		tag = f->tag;
 		if (tag <= last)
 			return NULL;	// tag must in ascending order
@@ -341,6 +360,9 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	if (n != t->n) {
 		t->base = -1;
 	}
+#ifdef C_SPROTO
+	t->size = c_struct_offset;
+#endif
 	return result;
 }
 
@@ -927,6 +949,7 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	size -= header_sz;
 	index = 0;
 	lasttag = -1;
+	int struct_offset;
 	for (i=0;i<st->n;i++) {
 		struct field *f = &st->f[i];
 		int type = f->type;
@@ -937,8 +960,13 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 		args.subtype = f->st;
 		args.mainindex = f->key;
 		args.extra = f->extra;
+#ifdef C_SPROTO
+		args.c_struct_size = 0;
+#endif
 		if (type & SPROTO_TARRAY) {
 			args.type = type & ~SPROTO_TARRAY;
+			if (SPROTO_TSTRUCT == args.type)
+				args.c_struct_size = f->st->size;
 			sz = encode_array(cb, &args, data, size);
 		} else {
 			args.type = type;
