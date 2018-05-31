@@ -5,6 +5,10 @@
 #include "skynet_server.h"
 #include "luashrtbl.h"
 
+#ifdef upf_agent
+#include "upf_agent.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -161,6 +165,19 @@ main(int argc, char *argv[]) {
 	lua_close(L);
 
 	skynet_start(&config);
+
+#ifdef upf_agent
+	// start threads for update-per-frame operation
+	struct upf_agent_config agent_config;
+	agent_config.thread_offset = optint("thread_offset", 8);
+	agent_config.thread_num = optint("thread_num", 8);
+	agent_config.frame_ms = optint("frame_ms", 40);
+	agent_config.user_per_thread = optint("user_per_thread", 30);
+
+	// (update per frame) for agent push data per server frame
+	upf_agent_start(agent_config);
+#endif
+	
 	skynet_globalexit();
 	luaS_exitshr();
 
