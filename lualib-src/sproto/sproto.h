@@ -2,6 +2,7 @@
 #define sproto_h
 
 #include <stddef.h>
+#include <stdbool.h>
 
 struct sproto;
 struct sproto_type;
@@ -26,7 +27,7 @@ struct sproto_type;
 #define SIZEOF_INT64 ((int)sizeof(uint64_t))
 #define SIZEOF_INT32 ((int)sizeof(uint32_t))
 #define SIZEOF_BOOL ((int)sizeof(bool))
-#define SIZEOF_OBJECT_POINTER ((int)sizeof(char*))
+#define SIZEOF_POINTER ((int)sizeof(char*))
 
 struct sproto * sproto_create(const void * proto, size_t sz);
 void sproto_release(struct sproto *);

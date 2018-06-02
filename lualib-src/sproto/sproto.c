@@ -332,7 +332,6 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		if (stream == NULL)
 			return NULL;
 #ifdef C_SPROTO
-		f->c_struct_offset = c_struct_offset;
 		if (SPROTO_TINTEGER == f->type)
 			c_struct_offset += SIZEOF_INT64;
 		else if (SPROTO_TBOOLEAN == f->type)

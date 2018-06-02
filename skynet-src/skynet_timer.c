@@ -237,12 +237,12 @@ systime_ms(uint32_t *sec, uint32_t *ms) {
 	struct timespec ti;
 	clock_gettime(CLOCK_REALTIME, &ti);
 	*sec = (uint32_t)ti.tv_sec;
-	*cs = (uint32_t)(ti.tv_nsec / 1000000);
+	*ms = (uint32_t)(ti.tv_nsec / 1000000);
 #else
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	*sec = tv.tv_sec;
-	*cs = tv.tv_usec / 1000;
+	*ms = tv.tv_usec / 1000;
 #endif
 }
 
