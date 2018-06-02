@@ -79,6 +79,8 @@ all : \
 $(SKYNET_BUILD_PATH)/skynet : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) $(LUA_LIB) $(MALLOC_STATICLIB)
 	$(CC) $(CFLAGS) -o $@ $^ -Iskynet-src -I$(JEMALLOC_INC) $(LDFLAGS) $(EXPORT) $(SKYNET_LIBS) $(SKYNET_DEFINES)
 
+include ../s_agent/s_agent.mk
+
 $(LUA_CLIB_PATH) :
 	mkdir $(LUA_CLIB_PATH)
 

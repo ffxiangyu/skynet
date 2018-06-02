@@ -5,7 +5,7 @@
 #include "skynet_server.h"
 #include "luashrtbl.h"
 
-#ifdef upf_agent
+#ifdef UPF_AGENT
 #include "upf_agent.h"
 #endif
 
@@ -166,7 +166,7 @@ main(int argc, char *argv[]) {
 
 	skynet_start(&config);
 
-#ifdef upf_agent
+#ifdef UPF_AGENT
 	// start threads for update-per-frame operation
 	struct upf_agent_config agent_config;
 	agent_config.thread_offset = optint("thread_offset", 8);
