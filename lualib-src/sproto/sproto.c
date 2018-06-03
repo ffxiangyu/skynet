@@ -964,8 +964,10 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 #endif
 		if (type & SPROTO_TARRAY) {
 			args.type = type & ~SPROTO_TARRAY;
+#ifdef C_SPROTO
 			if (SPROTO_TSTRUCT == args.type)
 				args.c_struct_size = f->st->size;
+#endif
 			sz = encode_array(cb, &args, data, size);
 		} else {
 			args.type = type;
