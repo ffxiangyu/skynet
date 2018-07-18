@@ -136,6 +136,18 @@ main(int argc, char *argv[]) {
 
 	sigign();
 
+#ifdef UPF_AGENT
+	// start threads for update-per-frame operation
+	struct upf_agent_config agent_config;
+	agent_config.thread_offset = optint("thread_offset", 8);
+	agent_config.thread_num = optint("thread_num", 8);
+	agent_config.frame_ms = optint("frame_ms", 40);
+	agent_config.user_per_thread = optint("user_per_thread", 30);
+
+	// (update per frame) for agent push data per server frame
+	upf_agent_start(&agent_config);
+#endif
+	
 	struct skynet_config config;
 
 	struct lua_State *L = luaL_newstate();
@@ -166,18 +178,6 @@ main(int argc, char *argv[]) {
 
 	skynet_start(&config);
 
-#ifdef UPF_AGENT
-	// start threads for update-per-frame operation
-	struct upf_agent_config agent_config;
-	agent_config.thread_offset = optint("thread_offset", 8);
-	agent_config.thread_num = optint("thread_num", 8);
-	agent_config.frame_ms = optint("frame_ms", 40);
-	agent_config.user_per_thread = optint("user_per_thread", 30);
-
-	// (update per frame) for agent push data per server frame
-	upf_agent_start(agent_config);
-#endif
-	
 	skynet_globalexit();
 	luaS_exitshr();
 

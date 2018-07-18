@@ -22,7 +22,7 @@ $(LUA_STATICLIB) :
 JEMALLOC_STATICLIB := 3rd/jemalloc/lib/libjemalloc_pic.a
 JEMALLOC_INC := 3rd/jemalloc/include/jemalloc
 
-all : jemalloc
+# all : jemalloc
 	
 .PHONY : jemalloc update3rd
 
@@ -71,13 +71,13 @@ SKYNET_SRC = skynet_main.c skynet_handle.c skynet_module.c skynet_mq.c \
   skynet_harbor.c skynet_env.c skynet_monitor.c skynet_socket.c socket_server.c \
   malloc_hook.c skynet_daemon.c skynet_log.c
 
-include ../s_agent/s_agent.mk
+include ../upf_agent/upf_agent.mk
 
+#  $(SKYNET_BUILD_PATH)/skynet
 all : \
-  $(SKYNET_BUILD_PATH)/skynet \
+  $(AGENT_BUILD_PATH)/upf_agent \
   $(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
-  $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so) \
-  s_agent
+  $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
 
 $(SKYNET_BUILD_PATH)/skynet : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) $(LUA_LIB) $(MALLOC_STATICLIB)
 	$(CC) $(CFLAGS) -o $@ $^ -Iskynet-src -I$(JEMALLOC_INC) $(LDFLAGS) $(EXPORT) $(SKYNET_LIBS) $(SKYNET_DEFINES)
@@ -114,7 +114,7 @@ $(LUA_CLIB_PATH)/lpeg.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@ 
 
 clean :
-	rm -f $(SKYNET_BUILD_PATH)/skynet $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
+	rm -f $(SKYNET_BUILD_PATH)/skynet $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so ../upf_agent/upf_agent
 
 cleanall: clean
 ifneq (,$(wildcard 3rd/jemalloc/Makefile))
