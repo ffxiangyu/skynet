@@ -598,6 +598,7 @@ static int
 lsaveproto(lua_State *L) {
 	struct sproto * sp = lua_touserdata(L, 1);
 	int index = luaL_optinteger(L, 2, 0);
+		fprintf(stderr, "lsaveproto %d\n", index);
 	if (index < 0 || index >= MAX_GLOBALSPROTO) {
 		return luaL_error(L, "Invalid global slot index %d", index);
 	}

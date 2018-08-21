@@ -154,6 +154,7 @@ thread_worker(void *p) {
 	struct worker_parm *wp = p;
 	int id = wp->id;
 	int weight = wp->weight;
+	fprintf(stderr, "thread_worker %d\n", id);
 	struct monitor *m = wp->m;
 	struct skynet_monitor *sm = m->m[id];
 	skynet_initthread(THREAD_WORKER);

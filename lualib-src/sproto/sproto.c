@@ -6,56 +6,21 @@
 
 #include "sproto.h"
 
-#define SPROTO_TARRAY 0x80
 #define CHUNK_SIZE 1000
 #define SIZEOF_LENGTH 4
 #define SIZEOF_HEADER 2
 #define SIZEOF_FIELD 2
 
-struct field {
-	int tag;
-	int type;
-	const char * name;
-	struct sproto_type * st;
-	int key;
-	int extra;
-};
-
-struct sproto_type {
-	const char * name;
-	int n;
-	int base;
-	int maxn;
-	struct field *f;
-#ifdef C_SPROTO
-	size_t size;
-#endif
-};
-
-struct protocol {
-	const char *name;
-	int tag;
-	int confirm;	// confirm == 1 where response nil
-	struct sproto_type * p[2];
-};
-
-struct chunk {
-	struct chunk * next;
-};
-
-struct pool {
-	struct chunk * header;
-	struct chunk * current;
-	int current_used;
-};
-
-struct sproto {
-	struct pool memory;
-	int type_n;
-	int protocol_n;
-	struct sproto_type * type;
-	struct protocol * proto;
-};
+size_t sizeof_sproto_simple_type(int type)
+{
+	switch(type) {
+	case SPROTO_TINTEGER:   // int64
+		return SIZEOF_INT64;
+	default:
+		fprintf(stderr, "sizeof_sproto_simple_type unsupported type %d\n", type);
+	}
+	return 0;
+}
 
 static void
 pool_init(struct pool *p) {
@@ -195,7 +160,7 @@ calc_pow(int base, int n) {
 }
 
 static const uint8_t *
-import_field(struct sproto *s, struct field *f, const uint8_t * stream) {
+import_field(struct sproto *s, struct sproto_field *f, const uint8_t * stream) {
 	uint32_t sz;
 	const uint8_t * result;
 	int fn;
@@ -321,27 +286,30 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	maxn = n;
 	last = -1;
 	t->n = n;
-	t->f = pool_alloc(&s->memory, sizeof(struct field) * n);
-#ifdef C_SPROTO
+	t->f = pool_alloc(&s->memory, sizeof(struct sproto_field) * n);
+#ifdef SPROTO_OBJ
 	int c_struct_offset = 0;
+	int num_arr = 0;
 #endif
 	for (i=0;i<n;i++) {
 		int tag;
-		struct field *f = &t->f[i];
+		struct sproto_field *f = &t->f[i];
 		stream = import_field(s, f, stream);
 		if (stream == NULL)
 			return NULL;
-#ifdef C_SPROTO
+#ifdef SPROTO_OBJ
 		if (SPROTO_TINTEGER == f->type)
 			c_struct_offset += SIZEOF_INT64;
 		else if (SPROTO_TBOOLEAN == f->type)
 			c_struct_offset += SIZEOF_BOOL;
 		else if (SPROTO_TSTRING == f->type)
-			c_struct_offset += SIZEOF_OBJECT_POINTER;
-		else if (SPROTO_TSTRUCT == f->type)
-			c_struct_offset += f->st->size; // this struct is full data
+			c_struct_offset += SIZEOF_POINTER;
+		else if (SPROTO_TSTRUCT == f->type) {
+			c_struct_offset += f->st->size_for_obj_no_arr; // this struct is full data
+			num_arr += f->st->num_arr;
+		}
 		else if (SPROTO_TARRAY == f->type)
-			c_struct_offset += SIZEOF_OBJECT_POINTER;
+			num_arr++;
 		else
 			printf("unsupported field type %d", f->type); // error
 #endif
@@ -359,8 +327,9 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	if (n != t->n) {
 		t->base = -1;
 	}
-#ifdef C_SPROTO
-	t->size = c_struct_offset;
+#ifdef SPROTO_OBJ
+	t->num_arr = num_arr;
+	t->size_for_obj_no_arr = c_struct_offset;
 #endif
 	return result;
 }
@@ -441,6 +410,7 @@ create_from_bundle(struct sproto *s, const uint8_t * stream, size_t sz) {
 	const uint8_t * typedata = NULL;
 	const uint8_t * protocoldata = NULL;
 	int fn = struct_field(stream, sz);
+	fprintf(stderr, "create_from_bundle fn %d\n", fn);
 	int i;
 	if (fn < 0 || fn > 2)
 		return NULL;
@@ -450,10 +420,13 @@ create_from_bundle(struct sproto *s, const uint8_t * stream, size_t sz) {
 
 	for (i=0;i<fn;i++) {
 		int value = toword(stream + i*SIZEOF_FIELD);
+		fprintf(stderr, "create_from_bundle %d :\n", i);
+		fprintf(stderr, "create_from_bundle %d\n", value);
 		int n;
 		if (value != 0)
 			return NULL;
 		n = count_array(content);
+		fprintf(stderr, "create_from_bundle %d\n", n);
 		if (n<0)
 			return NULL;
 		if (i == 0) {
@@ -471,16 +444,19 @@ create_from_bundle(struct sproto *s, const uint8_t * stream, size_t sz) {
 	for (i=0;i<s->type_n;i++) {
 		typedata = import_type(s, &s->type[i], typedata);
 		if (typedata == NULL) {
+			fprintf(stderr, "typedata == NULL\n");
 			return NULL;
 		}
 	}
 	for (i=0;i<s->protocol_n;i++) {
 		protocoldata = import_protocol(s, &s->proto[i], protocoldata);
 		if (protocoldata == NULL) {
+			fprintf(stderr, "protocoldata == NULL\n");
 			return NULL;
 		}
 	}
 
+	fprintf(stderr, "create_from_bundle return s\n");
 	return s;
 }
 
@@ -518,7 +494,7 @@ sproto_dump(struct sproto *s) {
 		for (j=0;j<t->n;j++) {
 			char array[2] = { 0, 0 };
 			const char * type_name = NULL;
-			struct field *f = &t->f[j];
+			struct sproto_field *f = &t->f[j];
 			int type = f->type & ~SPROTO_TARRAY;
 			if (f->type & SPROTO_TARRAY) {
 				array[0] = '*';
@@ -651,7 +627,7 @@ sproto_name(struct sproto_type * st) {
 	return st->name;
 }
 
-static struct field *
+static struct sproto_field *
 findtag(const struct sproto_type *st, int tag) {
 	int begin, end;
 	if (st->base >=0 ) {
@@ -664,7 +640,7 @@ findtag(const struct sproto_type *st, int tag) {
 	end = st->n;
 	while (begin < end) {
 		int mid = (begin+end)/2;
-		struct field *f = &st->f[mid];
+		struct sproto_field *f = &st->f[mid];
 		int t = f->tag;
 		if (t == tag) {
 			return f;
@@ -950,7 +926,7 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	lasttag = -1;
 	int struct_offset;
 	for (i=0;i<st->n;i++) {
-		struct field *f = &st->f[i];
+		struct sproto_field *f = &st->f[i];
 		int type = f->type;
 		int value = 0;
 		int sz = -1;
@@ -1170,7 +1146,7 @@ sproto_decode(const struct sproto_type *st, const void * data, int size, sproto_
 	tag = -1;
 	for (i=0;i<fn;i++) {
 		uint8_t * currentdata;
-		struct field * f;
+		struct sproto_field * f;
 		int value = toword(stream + i * SIZEOF_FIELD);
 		++ tag;
 		if (value & 1) {

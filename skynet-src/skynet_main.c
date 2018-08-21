@@ -8,13 +8,17 @@
 #ifdef UPF_AGENT
 #include "upf_agent.h"
 #endif
+#ifdef SIMULATOR_WORLD
+#include "s_world.h"
+#endif
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 #include <signal.h>
 #include <assert.h>
 
@@ -136,18 +140,6 @@ main(int argc, char *argv[]) {
 
 	sigign();
 
-#ifdef UPF_AGENT
-	// start threads for update-per-frame operation
-	struct upf_agent_config agent_config;
-	agent_config.thread_offset = optint("thread_offset", 8);
-	agent_config.thread_num = optint("thread_num", 8);
-	agent_config.frame_ms = optint("frame_ms", 40);
-	agent_config.user_per_thread = optint("user_per_thread", 30);
-
-	// (update per frame) for agent push data per server frame
-	upf_agent_start(&agent_config);
-#endif
-	
 	struct skynet_config config;
 
 	struct lua_State *L = luaL_newstate();
@@ -176,7 +168,36 @@ main(int argc, char *argv[]) {
 
 	lua_close(L);
 
+#ifdef UPF_AGENT
+	// start threads for update-per-frame operation
+	struct upf_agent_config agent_config;
+	agent_config.thread_offset = optint("thread_offset", 8);
+	agent_config.thread_num = optint("thread_num", 8);
+	agent_config.frame_ms = optint("frame_ms", 40);
+	agent_config.user_per_thread = optint("user_per_thread", 30);
+
+	// (update per frame) for agent push data per server frame
+	upf_agent_start(&agent_config);
+#endif
+	
+	// fprintf(stderr, "test SIMULATOR_WORLD\n");
+#ifdef SIMULATOR_WORLD
+	// start threads for update-per-frame operation
+	struct s_world_config world_config;
+	world_config.frame_ms = optint("frame_ms", 40);
+
+	s_world_start(&world_config);
+#endif
+	
+	// will thread_join inside, put last
 	skynet_start(&config);
+
+#ifdef UPF_AGENT
+	upf_agent_pthread_join();
+#endif
+#ifdef SIMULATOR_WORLD
+	s_world_pthread_join();
+#endif
 
 	skynet_globalexit();
 	luaS_exitshr();

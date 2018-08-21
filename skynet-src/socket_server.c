@@ -1510,6 +1510,7 @@ int
 socket_server_send(struct socket_server *ss, int id, const void * buffer, int sz) {
 	struct socket * s = &ss->slot[HASH_ID(id)];
 	if (s->id != id || s->type == SOCKET_TYPE_INVALID) {
+		sprintf(stderr, "s->id != id || s->type == SOCKET_TYPE_INVALID, %d", s->id);
 		free_buffer(ss, buffer, sz);
 		return -1;
 	}

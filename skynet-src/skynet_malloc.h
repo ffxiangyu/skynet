@@ -2,6 +2,7 @@
 #define skynet_malloc_h
 
 #include <stddef.h>
+#include <stdlib.h> // use c malloc, or compile with c++ will error
 
 #define skynet_malloc malloc
 #define skynet_calloc calloc

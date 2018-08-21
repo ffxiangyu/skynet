@@ -72,12 +72,14 @@ SKYNET_SRC = skynet_main.c skynet_handle.c skynet_module.c skynet_mq.c \
   malloc_hook.c skynet_daemon.c skynet_log.c
 
 include ../upf_agent/upf_agent.mk
+include ../s_world/world.mk
 
-#  $(SKYNET_BUILD_PATH)/skynet
 all : \
-  $(AGENT_BUILD_PATH)/upf_agent \
-  $(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
-  $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
+    $(SKYNET_BUILD_PATH)/skynet \
+    $(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
+    $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
+s_world : \
+  $(WORLD_BUILD_PATH)/world
 
 $(SKYNET_BUILD_PATH)/skynet : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) $(LUA_LIB) $(MALLOC_STATICLIB)
 	$(CC) $(CFLAGS) -o $@ $^ -Iskynet-src -I$(JEMALLOC_INC) $(LDFLAGS) $(EXPORT) $(SKYNET_LIBS) $(SKYNET_DEFINES)
@@ -111,6 +113,9 @@ $(LUA_CLIB_PATH)/sproto.so : lualib-src/sproto/sproto.c lualib-src/sproto/lsprot
 	$(CC) $(CFLAGS) $(SHARED) -Ilualib-src/sproto $^ -o $@ 
 
 $(LUA_CLIB_PATH)/lpeg.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c 3rd/lpeg/lptree.c 3rd/lpeg/lpvm.c | $(LUA_CLIB_PATH)
+	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@ 
+
+$(LUA_CLIB_PATH)/cjson.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.c 3rd/lpeg/lptree.c 3rd/lpeg/lpvm.c | $(LUA_CLIB_PATH)
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@ 
 
 clean :

@@ -27,6 +27,8 @@ skynet_getenv(const char *key) {
 
 	SPIN_UNLOCK(E)
 
+	fprintf(stderr, "skynet_getenv %s = %s\n", key, result);
+	// fprintf(stderr, "skynet_getenv %s = %ld\n", key, (uint64_t)result);
 	return result;
 }
 
@@ -34,6 +36,7 @@ void
 skynet_setenv(const char *key, const char *value) {
 	SPIN_LOCK(E)
 	
+	// fprintf(stderr, "skynet_setenv %s = %s\n", key, value);
 	lua_State *L = E->L;
 	lua_getglobal(L, key);
 	assert(lua_isnil(L, -1));
