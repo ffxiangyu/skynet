@@ -247,6 +247,7 @@ encode(const struct sproto_arg *args) {
 
 static void *
 expand_buffer(lua_State *L, int osz, int nsz) {
+	fprintf(stderr, "expand_buffer %d %d\n", osz, nsz);
 	void *output;
 	do {
 		osz *= 2;
@@ -255,12 +256,86 @@ expand_buffer(lua_State *L, int osz, int nsz) {
 		luaL_error(L, "object is too large (>%d)", ENCODE_MAXSIZE);
 		return NULL;
 	}
+	fprintf(stderr, "expand_buffer %d %d\n", osz, nsz);
 	output = lua_newuserdata(L, osz);
 	lua_replace(L, lua_upvalueindex(1));
 	lua_pushinteger(L, osz);
 	lua_replace(L, lua_upvalueindex(2));
 
 	return output;
+}
+
+// idx must be positive
+static void _print_table(lua_State *L, int idx, int indent, int depth)
+{
+	if (idx <= 0) {
+		fprintf(stderr, "ERROR obj_data_def.c _print_table idx is %d, should be > 0", idx);
+		exit(1);
+	}
+	fprintf(stderr, "{\n");
+	int i;
+	lua_pushnil(L);  /* first key */
+	while (lua_next(L, idx) != 0) {
+		int key_type = lua_type(L, -2);
+		int val_type = lua_type(L, -1);
+		// print key
+		for (i = 0; i < indent+2; i++) fprintf(stderr, " ");
+		if (LUA_TNUMBER == key_type)
+			fprintf(stderr, "%d = ", (int)lua_tonumber(L, -2));
+		else if (LUA_TSTRING == key_type)
+			fprintf(stderr, "%s = ", lua_tostring(L, -2));
+		else
+			fprintf(stderr, "[%s] = ", lua_typename(L, -2));
+		// print val
+		if (LUA_TNUMBER == val_type)
+			fprintf(stderr, "%d,\n", (int)lua_tonumber(L, -1));
+		else if (LUA_TSTRING == val_type)
+			fprintf(stderr, "%s,\n", lua_tostring(L, -1));
+		else if (LUA_TTABLE == val_type) {
+			if (depth < 8) {
+				_print_table(L, lua_gettop(L), indent+2, depth+1);
+				fprintf(stderr, ",\n");
+			} else
+				fprintf(stderr, "[table],\n");
+		}
+		else
+			fprintf(stderr, "[%s]\n", lua_typename(L, -1));
+
+		lua_pop(L, 1); // pop val
+    }
+	for (i = 0; i < indent; i++) fprintf(stderr, " ");
+	fprintf(stderr, "}");
+}
+
+static void print_table(lua_State *L, int idx, char *name)
+{
+	if (idx <= 0) {
+		fprintf(stderr, "ERROR obj_data_def.c print_table idx is %d, should be > 0", idx);
+		exit(1);
+	}
+	fprintf(stderr, "%s : ", name);
+    _print_table(L, idx, 0, 0);
+	fprintf(stderr, "\n");
+}
+
+// idx must be positive
+static void print_stack_elem(lua_State *L, int idx)
+{
+	fprintf(stderr, "[%d] => ", idx);
+	int type = lua_type(L, idx);
+	// print val
+	if (LUA_TNUMBER == type)
+		fprintf(stderr, "%d\n", (int)lua_tonumber(L, idx));
+	else if (LUA_TSTRING == type)
+		fprintf(stderr, "\"%s\"\n", lua_tostring(L, idx));
+	else if (LUA_TBOOLEAN == type)
+		fprintf(stderr, "[bool]%s\n", lua_toboolean(L, idx) ? "true" : "false");
+	else if (LUA_TTABLE == type) {
+		_print_table(L, idx, 0, 0);
+		fprintf(stderr, "\n");
+	}
+	else
+		fprintf(stderr, "[%s]\n", lua_typename(L, idx));
 }
 
 /*
@@ -301,7 +376,12 @@ lencode(lua_State *L) {
 			buffer = expand_buffer(L, sz, sz*2);
 			sz *= 2;
 		} else {
+			lua_settop(L, tbl_index);
 			lua_pushlstring(L, buffer, r);
+			int i;
+			fprintf(stderr, "-----lencode %d\n", lua_gettop(L));
+			for (i = 1; i <= lua_gettop(L); i++)
+				print_stack_elem(L, i);
 			return 1;
 		}
 	}

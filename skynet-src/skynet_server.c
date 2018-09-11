@@ -124,6 +124,7 @@ drop_message(struct skynet_message *msg, void *ud) {
 
 struct skynet_context * 
 skynet_context_new(const char * name, const char *param) {
+	fprintf(stderr, "skynet_server.c skynet_context_new %s\n", name);
 	struct skynet_module * mod = skynet_module_query(name);
 
 	if (mod == NULL)
@@ -419,6 +420,7 @@ cmd_reg(struct skynet_context * context, const char * param) {
 
 static const char *
 cmd_query(struct skynet_context * context, const char * param) {
+	fprintf(stderr, "skynet_server.c cmd_query %s\n", param);
 	if (param[0] == '.') {
 		uint32_t handle = skynet_handle_findname(param+1);
 		if (handle) {
@@ -481,6 +483,7 @@ cmd_kill(struct skynet_context * context, const char * param) {
 
 static const char *
 cmd_launch(struct skynet_context * context, const char * param) {
+	fprintf(stderr, "skyent_server.c cmd_launch %s\n", param);
 	size_t sz = strlen(param);
 	char tmp[sz+1];
 	strcpy(tmp,param);
@@ -489,6 +492,7 @@ cmd_launch(struct skynet_context * context, const char * param) {
 	args = strsep(&args, "\r\n");
 	struct skynet_context * inst = skynet_context_new(mod,args);
 	if (inst == NULL) {
+		fprintf(stderr, "skyent_server.c cmd_launch inst == NULL\n");
 		return NULL;
 	} else {
 		id_to_hex(context->result, inst->handle);
@@ -698,6 +702,12 @@ _filter_args(struct skynet_context * context, int type, int *session, void ** da
 
 int
 skynet_send(struct skynet_context * context, uint32_t source, uint32_t destination , int type, int session, void * data, size_t sz) {
+	int i;
+	fprintf(stderr, "skynet_server.c skynet_send %d----------------\n", destination);
+	for (i = 0; i < sz; i++)
+		fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
+	fprintf(stderr, "\n");
+
 	if ((sz & MESSAGE_TYPE_MASK) != sz) {
 		skynet_error(context, "The message to %x is too large", destination);
 		if (type & PTYPE_TAG_DONTCOPY) {
@@ -738,6 +748,12 @@ skynet_send(struct skynet_context * context, uint32_t source, uint32_t destinati
 
 int
 skynet_sendname(struct skynet_context * context, uint32_t source, const char * addr , int type, int session, void * data, size_t sz) {
+	int i;
+	fprintf(stderr, "skynet_server.c skynet_sendname %s----------------\n", addr);
+	for (i = 0; i < sz; i++)
+		fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
+	fprintf(stderr, "\n");
+
 	if (source == 0) {
 		source = context->handle;
 	}

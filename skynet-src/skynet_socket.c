@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 static struct socket_server * SOCKET_SERVER = NULL;
 
@@ -113,6 +114,11 @@ skynet_socket_poll() {
 
 int
 skynet_socket_send(struct skynet_context *ctx, int id, void *buffer, int sz) {
+	int i;
+	fprintf(stderr, "skynet_socket.c skynet_socket_send %d----------------\n", id);
+	for (i = 0; i < sz; i++)
+		fprintf(stderr, "%02X ", ((uint8_t*) buffer)[i]);
+	fprintf(stderr, "\n");
 	return socket_server_send(SOCKET_SERVER, id, buffer, sz);
 }
 

@@ -2,6 +2,7 @@ include platform.mk
 
 LUA_CLIB_PATH ?= luaclib
 CSERVICE_PATH ?= cservice
+SPROTO_PATH ?= lualib-src/sproto
 
 SKYNET_BUILD_PATH ?= .
 
@@ -78,8 +79,6 @@ all : \
     $(SKYNET_BUILD_PATH)/skynet \
     $(foreach v, $(CSERVICE), $(CSERVICE_PATH)/$(v).so) \
     $(foreach v, $(LUA_CLIB), $(LUA_CLIB_PATH)/$(v).so)
-s_world : \
-  $(WORLD_BUILD_PATH)/world
 
 $(SKYNET_BUILD_PATH)/skynet : $(foreach v, $(SKYNET_SRC), skynet-src/$(v)) $(LUA_LIB) $(MALLOC_STATICLIB)
 	$(CC) $(CFLAGS) -o $@ $^ -Iskynet-src -I$(JEMALLOC_INC) $(LDFLAGS) $(EXPORT) $(SKYNET_LIBS) $(SKYNET_DEFINES)
@@ -119,9 +118,9 @@ $(LUA_CLIB_PATH)/cjson.so : 3rd/lpeg/lpcap.c 3rd/lpeg/lpcode.c 3rd/lpeg/lpprint.
 	$(CC) $(CFLAGS) $(SHARED) -I3rd/lpeg $^ -o $@ 
 
 clean :
-	rm -f $(SKYNET_BUILD_PATH)/skynet $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so ../upf_agent/upf_agent
+	rm -f $(SKYNET_BUILD_PATH)/skynet $(CSERVICE_PATH)/*.so $(LUA_CLIB_PATH)/*.so
 
-cleanall: clean
+cleanall: clean clean_upf clean_world
 ifneq (,$(wildcard 3rd/jemalloc/Makefile))
 	cd 3rd/jemalloc && $(MAKE) clean && rm Makefile
 endif

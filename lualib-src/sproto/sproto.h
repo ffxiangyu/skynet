@@ -93,6 +93,7 @@ struct sproto_type * sproto_protoquery(const struct sproto *, int proto, int wha
 int sproto_protoresponse(const struct sproto *, int proto);
 
 struct sproto_type * sproto_type(const struct sproto *, const char * type_name);
+struct sproto_field * sproto_field(const struct sproto_type *, const char * field_name);
 
 int sproto_pack(const void * src, int srcsz, void * buffer, int bufsz);
 int sproto_unpack(const void * src, int srcsz, void * buffer, int bufsz);

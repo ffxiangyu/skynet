@@ -337,6 +337,12 @@ send_remote(struct skynet_context * ctx, int fd, const char * buffer, size_t sz,
 	memcpy(sendbuf+4, buffer, sz);
 	header_to_message(cookie, sendbuf+4+sz);
 
+	int i;
+	fprintf(stderr, "service_harbor.c send_remote\n");
+	for (i = 0; i < sz_header+4; i++)
+		fprintf(stderr, "%02X ", (uint8_t)sendbuf[i]);
+	fprintf(stderr, "\n");
+	
 	// ignore send error, because if the connection is broken, the mainloop will recv a message.
 	skynet_socket_send(ctx, fd, sendbuf, sz_header+4);
 }

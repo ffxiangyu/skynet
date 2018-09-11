@@ -19,6 +19,13 @@ invalid_type(int type) {
 void 
 skynet_harbor_send(struct remote_message *rmsg, uint32_t source, int session) {
 	assert(invalid_type(rmsg->type) && REMOTE);
+	
+	int i;
+	fprintf(stderr, "skynet_harbor.c skynet_harbor_send %s---------\n", rmsg->destination.name);
+	for (i = 0; i < rmsg->sz; i++)
+		fprintf(stderr, "%02X ", ((uint8_t*) (rmsg->message))[i]);
+	fprintf(stderr, "\n");
+
 	skynet_context_send(REMOTE, rmsg, sizeof(*rmsg) , source, PTYPE_SYSTEM , session);
 }
 

@@ -396,7 +396,7 @@ end
 
 function skynet.rawcall(addr, typename, msg, sz)
 	local p = proto[typename]
-	local session = assert(c.send(addr, p.id , nil , msg, sz), "call to invalid address")
+	local session = assert(c.send(addr, p.id , nil , msg, sz), "call to invalid address" .. skynet.address(addr))
 	return yield_call(addr, session)
 end
 
@@ -528,6 +528,16 @@ end
 
 function skynet.newservice(name, ...)
 	return skynet.call(".launcher", "lua" , "LAUNCH", "snlua", name, ...)
+end
+
+function skynet.newcservice(name, ...)
+	-- local ret = skynet.call(".launcher", "lua" , "LAUNCH", name, ...) -- cant use this to launch c service will not return, investigate later
+	-- print("skynet.lua skynet.newcservice " .. name)
+	-- return ret
+	require "skynet.manager"
+	local param = table.concat({...}, " ")
+	local inst = skynet.launch(name, param)
+	return inst
 end
 
 function skynet.uniqueservice(global, ...)

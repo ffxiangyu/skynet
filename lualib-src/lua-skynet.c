@@ -234,6 +234,11 @@ send_message(lua_State *L, int source, int idx_type) {
 		if (len == 0) {
 			msg = NULL;
 		}
+		fprintf(stderr, "lua-skynet.c send_message %d------------\n", (int)len);
+		int i;
+	    for (i = 0; i < len; i++)
+			fprintf(stderr, "%02X ", ((uint8_t*)msg)[i]);
+		fprintf(stderr, "\n");
 		if (dest_string) {
 			session = skynet_sendname(context, source, dest_string, type, session , msg, len);
 		} else {

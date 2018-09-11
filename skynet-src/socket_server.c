@@ -1508,9 +1508,15 @@ can_direct_write(struct socket *s, int id) {
 // return -1 when error, 0 when success
 int 
 socket_server_send(struct socket_server *ss, int id, const void * buffer, int sz) {
+	int i;
+	fprintf(stderr, "socket_server.c socket_server_send %d---------\n", id);
+	for (i = 0; i < sz; i++)
+		fprintf(stderr, "%02X ", ((uint8_t*) buffer)[i]);
+	fprintf(stderr, "\n");
+
 	struct socket * s = &ss->slot[HASH_ID(id)];
 	if (s->id != id || s->type == SOCKET_TYPE_INVALID) {
-		sprintf(stderr, "s->id != id || s->type == SOCKET_TYPE_INVALID, %d", s->id);
+		fprintf(stderr, "s->id != id || s->type == SOCKET_TYPE_INVALID, %d", s->id);
 		free_buffer(ss, buffer, sz);
 		return -1;
 	}

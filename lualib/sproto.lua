@@ -246,11 +246,17 @@ function host:attach(sp)
 
 		if proto.request then
 			local content = core.encode(proto.request, args)
-		print('content:')
-		for i = 1, #content do
-			print(string.format("%02X", content:byte(i)))
-		end
-			return core.pack(header ..  content)
+			-- print('content:')
+			-- for i = 1, #content do
+			-- 	print(string.format("%02X", content:byte(i)))
+			-- end
+			-- return core.pack(header ..  content)
+			local msg = core.pack(header ..  content)
+			-- print('msg pack:')
+			-- for i = 1, #msg do
+			-- 	print(string.format("  %02X", msg:byte(i)))
+			-- end
+			return msg
 		else
 			return core.pack(header)
 		end

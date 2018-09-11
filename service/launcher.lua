@@ -77,6 +77,7 @@ end
 local function launch_service(service, ...)
 	local param = table.concat({...}, " ")
 	local inst = skynet.launch(service, param)
+	print("launcher.lua launch_service " .. (inst and inst or "NIL") .. " " .. service .. " " .. param)
 	local response = skynet.response()
 	if inst then
 		services[inst] = service .. " " .. param
@@ -90,6 +91,7 @@ end
 
 function command.LAUNCH(_, service, ...)
 	launch_service(service, ...)
+	print("launcher.lua command.LAUNCH")
 	return NORET
 end
 
@@ -141,11 +143,15 @@ skynet.register_protocol {
 	end,
 }
 
+local printf = function(s,...)
+           return io.write(s:format(...))
+         end -- function
 skynet.dispatch("lua", function(session, address, cmd , ...)
 	cmd = string.upper(cmd)
 	local f = command[cmd]
 	if f then
 		local ret = f(address, ...)
+		printf("launcher.lua skynet.dispatch cmd %s address %s ret %d\n", cmd, address, ret==NORET and 1 or 0)
 		if ret ~= NORET then
 			skynet.ret(skynet.pack(ret))
 		end

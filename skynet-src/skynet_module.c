@@ -52,6 +52,15 @@ _try_open(struct modules *m, const char * name) {
 			exit(1);
 		}
 		dl = dlopen(tmp, RTLD_NOW | RTLD_GLOBAL);
+		// if (NULL != dl)
+		// 	fprintf(stderr, "skynet_module.c dlopen %s success\n", tmp);
+// #ifdef S_WORLD
+// 		if (0 == strcmp(name, "world_agent")) {
+// 			void (*register_function)(void(*)());
+// 			register_function = dlsym(dl, "register_function");
+// 			register_function(s_world_test);
+// 		}
+// #endif
 		path = l;
 	}while(dl == NULL);
 
@@ -96,11 +105,14 @@ open_sym(struct skynet_module *mod) {
 	mod->release = get_api(mod, "_release");
 	mod->signal = get_api(mod, "_signal");
 
+	if (mod->init == NULL)
+		fprintf(stderr, "skynet_module.c open_sym mod->init == NULL\n");
 	return mod->init == NULL;
 }
 
 struct skynet_module * 
 skynet_module_query(const char * name) {
+	fprintf(stderr, "skynet_module.c skynet_module_query %s\n", name);
 	struct skynet_module * result = _query(name);
 	if (result)
 		return result;
@@ -153,6 +165,7 @@ skynet_module_instance_create(struct skynet_module *m) {
 
 int
 skynet_module_instance_init(struct skynet_module *m, void * inst, struct skynet_context *ctx, const char * parm) {
+	fprintf(stderr, "skynet_module.c skynet_module_instance_init %s %s\n", m->name, NULL == parm ? "NULL" : parm);
 	return m->init(inst, ctx, parm);
 }
 

@@ -14,6 +14,7 @@ skynet.register_protocol {
 local handler = {}
 
 function handler.open(source, conf)
+	local log = require "log"
 	watchdog = conf.watchdog or source
 end
 
