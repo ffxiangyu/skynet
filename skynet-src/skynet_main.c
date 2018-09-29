@@ -174,7 +174,10 @@ main(int argc, char *argv[]) {
 	agent_config.thread_offset = optint("thread_offset", 8);
 	agent_config.thread_num = optint("thread_num", 8);
 	agent_config.frame_ms = optint("frame_ms", 40);
+	agent_config.cache_ms = optint("cache_ms", 40);
 	agent_config.user_per_thread = optint("user_per_thread", 30);
+	optstring("logpath", "upf_agent/log");
+	optint("loglevel", 5);
 
 	// (update per frame) for agent push data per server frame
 	upf_agent_start(&agent_config);
@@ -185,6 +188,8 @@ main(int argc, char *argv[]) {
 	// start threads for update-per-frame operation
 	struct s_world_config world_config;
 	world_config.frame_ms = optint("frame_ms", 40);
+	optstring("logpath", "s_world/log");
+	optint("loglevel", 5);
 
 	s_world_start(&world_config);
 #endif

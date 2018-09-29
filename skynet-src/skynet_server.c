@@ -702,11 +702,11 @@ _filter_args(struct skynet_context * context, int type, int *session, void ** da
 
 int
 skynet_send(struct skynet_context * context, uint32_t source, uint32_t destination , int type, int session, void * data, size_t sz) {
-	int i;
-	fprintf(stderr, "skynet_server.c skynet_send %d----------------\n", destination);
-	for (i = 0; i < sz; i++)
-		fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
-	fprintf(stderr, "\n");
+	// int i;
+	// fprintf(stderr, "skynet_server.c skynet_send %u => %u----------------\n", source, destination);
+	// for (i = 0; i < sz; i++)
+	// 	fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
+	// fprintf(stderr, "\n");
 
 	if ((sz & MESSAGE_TYPE_MASK) != sz) {
 		skynet_error(context, "The message to %x is too large", destination);
@@ -748,11 +748,11 @@ skynet_send(struct skynet_context * context, uint32_t source, uint32_t destinati
 
 int
 skynet_sendname(struct skynet_context * context, uint32_t source, const char * addr , int type, int session, void * data, size_t sz) {
-	int i;
-	fprintf(stderr, "skynet_server.c skynet_sendname %s----------------\n", addr);
-	for (i = 0; i < sz; i++)
-		fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
-	fprintf(stderr, "\n");
+	// int i;
+	// fprintf(stderr, "skynet_server.c skynet_sendname %s----------------\n", addr);
+	// for (i = 0; i < sz; i++)
+	// 	fprintf(stderr, "%02X ", ((uint8_t*) data)[i]);
+	// fprintf(stderr, "\n");
 
 	if (source == 0) {
 		source = context->handle;

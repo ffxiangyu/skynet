@@ -210,6 +210,7 @@ static int
 send_message(lua_State *L, int source, int idx_type) {
 	struct skynet_context * context = lua_touserdata(L, lua_upvalueindex(1));
 	uint32_t dest = (uint32_t)lua_tointeger(L, 1);
+	// fprintf(stderr, "lua-skynet.c send_message dest %u----------------\n", dest);
 	const char * dest_string = NULL;
 	if (dest == 0) {
 		if (lua_type(L,1) == LUA_TNUMBER) {
@@ -234,11 +235,11 @@ send_message(lua_State *L, int source, int idx_type) {
 		if (len == 0) {
 			msg = NULL;
 		}
-		fprintf(stderr, "lua-skynet.c send_message %d------------\n", (int)len);
-		int i;
-	    for (i = 0; i < len; i++)
-			fprintf(stderr, "%02X ", ((uint8_t*)msg)[i]);
-		fprintf(stderr, "\n");
+		// fprintf(stderr, "lua-skynet.c send_message %d------------\n", (int)len);
+		// int i;
+	 //    for (i = 0; i < len; i++)
+		// 	fprintf(stderr, "%02X ", ((uint8_t*)msg)[i]);
+		// fprintf(stderr, "\n");
 		if (dest_string) {
 			session = skynet_sendname(context, source, dest_string, type, session , msg, len);
 		} else {

@@ -378,10 +378,10 @@ lencode(lua_State *L) {
 		} else {
 			lua_settop(L, tbl_index);
 			lua_pushlstring(L, buffer, r);
-			int i;
-			fprintf(stderr, "-----lencode %d\n", lua_gettop(L));
-			for (i = 1; i <= lua_gettop(L); i++)
-				print_stack_elem(L, i);
+			// int i;
+			// fprintf(stderr, "-----lencode %d\n", lua_gettop(L));
+			// for (i = 1; i <= lua_gettop(L); i++)
+			// 	print_stack_elem(L, i);
 			return 1;
 		}
 	}

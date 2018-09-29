@@ -203,7 +203,7 @@ function host:dispatch(...)
 	local content = bin:sub(size + 1)
 	if header.type then
 		-- request
-		print('header.type ' .. header.type)
+		-- print('host:dispatch header.type ' .. header.type)
 		local proto = queryproto(self.__proto, header.type)
 		local result
 		if proto.request then
@@ -235,10 +235,10 @@ function host:attach(sp)
 		header_tmp.session = session
 		header_tmp.ud = ud
 		local header = core.encode(self.__package, header_tmp)
-		print('header:')
-		for i = 1, #header do
-			print(string.format("%02X", header:byte(i)))
-		end
+		-- print('host:attach header:')
+		-- for i = 1, #header do
+		-- 	print(string.format("%02X", header:byte(i)))
+		-- end
 
 		if session then
 			self.__session[session] = proto.response or true

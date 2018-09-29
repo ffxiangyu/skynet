@@ -530,7 +530,7 @@ function skynet.newservice(name, ...)
 	return skynet.call(".launcher", "lua" , "LAUNCH", "snlua", name, ...)
 end
 
-function skynet.newcservice(name, ...)
+function skynet.newservice_c(name, ...)
 	-- local ret = skynet.call(".launcher", "lua" , "LAUNCH", name, ...) -- cant use this to launch c service will not return, investigate later
 	-- print("skynet.lua skynet.newcservice " .. name)
 	-- return ret

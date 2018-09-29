@@ -972,7 +972,7 @@ sproto_encode(const struct sproto_type *st, void * buffer, int size, sproto_call
 	size -= header_sz;
 	index = 0;
 	lasttag = -1;
-	fprintf(stderr, "sproto_encode st->name:%s st->n:%d\n", st->name, st->n);
+	// fprintf(stderr, "sproto_encode st->name:%s st->n:%d\n", st->name, st->n);
 	for (i=0;i<st->n;i++) {
 		struct sproto_field *f = &st->f[i];
 		int type = f->type;
