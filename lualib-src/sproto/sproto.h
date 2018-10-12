@@ -15,6 +15,8 @@ struct sproto_field {
 	int extra;
 #ifdef SPROTO_OBJ
 	size_t offset_for_obj;
+	int unit_for_arr; // how many elements make a data
+	                  // default 0, > 0 for arr, -1 for the xx_unit_for_arr field
 #endif
 };
 
@@ -94,6 +96,7 @@ int sproto_protoresponse(const struct sproto *, int proto);
 
 struct sproto_type * sproto_type(const struct sproto *, const char * type_name);
 struct sproto_field * sproto_field(const struct sproto_type *, const char * field_name);
+struct sproto_field * sproto_field_by_tag(const struct sproto_type *, int tag);
 
 int sproto_pack(const void * src, int srcsz, void * buffer, int bufsz);
 int sproto_unpack(const void * src, int srcsz, void * buffer, int bufsz);

@@ -300,6 +300,8 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		if (stream == NULL)
 			return NULL;
 #ifdef SPROTO_OBJ
+		f->offset_for_obj = c_struct_offset;
+		f->unit_for_arr = 0;
 		if (SPROTO_TINTEGER == f->type)
 			c_struct_offset += SIZEOF_INT64;
 		else if (SPROTO_TBOOLEAN == f->type)
@@ -311,10 +313,29 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 			num_arr += f->st->num_arr;
 			sproto_obj_n += f->st->n - 1;
 		}
-		else if (SPROTO_TARRAY & f->type)
+		else if (SPROTO_TARRAY & f->type) {
 			num_arr++;
-		else
-			printf("unsupported field type %d", f->type); // error
+			f->unit_for_arr = 1; // default 1 for array, if no xx_unit_for_arr field
+			// if next field's name is this+_unit_for_arr
+			if (n > i + 1) {
+				struct sproto_field *next_f = &t->f[i+1];
+				size_t name_len = strlen(next_f->name);
+				if (name_len > 13) {
+					char subbuff[14]; // _unit_for_arr 's len is 13
+					memcpy(subbuff, next_f->name + name_len - 13, 13);
+					subbuff[13] = '\0';
+					if (0 == strcmp(next_f->name, "_unit_for_arr")) {
+						f->unit_for_arr = next_f->tag;
+						sproto_obj_n--; // will not need the next field
+						next_f->unit_for_arr = -1;
+					}
+				}
+			}
+		}
+		else {
+			fprintf(stderr, "sproto.c import_type ERROR unsupported field type %d", f->type); // error
+			exit(1);
+		}
 #endif
 		tag = f->tag;
 		if (tag <= last)
@@ -338,33 +359,45 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		for (i = 0; i < t->n; i++)
 			fprintf(stderr, "  %d %10s type %d\n", i, t->f[i].name, t->f[i].type);
 		struct sproto_field *tmp = pool_alloc(&s->memory, sizeof(struct sproto_field) * sproto_obj_n);
+		int tag_add = 0;
+		for (i = 0, j = 0; i < t->n; i++) {
+			struct sproto_field *f = &t->f[i];
+			if (SPROTO_TSTRUCT != f->type)
+				continue;
+			if (f->st->n <= 0)
+				continue;
+			if (f->st->f[0].tag > tag_add)
+				tag_add = f->st->f[0].tag;
+		}
+		if (tag_add > 0)
+			tag_add = (tag_add / 1000 + 1) * 1000;
+		// _WorldObj_'s tag_add must be 0
+		;
 		for (i = 0, j = 0; i < t->n; i++) {
 			struct sproto_field *f = &t->f[i];
 			if (SPROTO_TSTRUCT == f->type) {
 				// fprintf(stderr, " struct %s %d fields\n", f->st->name, f->st->n);
 				for (k = 0; k < f->st->n; k++) {
-					tmp[j+k] = f->st->f[k];
+					tmp[j].offset_for_obj = f->offset_for_obj + f->st->f[k].offset_for_obj;
+					tmp[j++] = f->st->f[k];
 					// fprintf(stderr, "  %d %10s %d %d\n", j+k, tmp[j+k].name, tmp[j+k].type, f->st->f[k].type);
-					if (0 == f->st->f[k].tag) // type, 0 is reserved for type
-						tmp[j+k].tag = 0;
-					else if (f->st->f[k].tag < 100)
-						tmp[j+k].tag = f->tag + f->st->f[k].tag;
-					else
-						tmp[j+k].tag = f->tag * 100 + f->st->f[k].tag;
 				}
-				j += f->st->n;
 			} else {
-				tmp[j++] = t->f[i];
+				if (f->unit_for_arr < 0)
+					continue;
+				tmp[j] = t->f[i];
+				tmp[j++].tag = t->f[i].tag + tag_add;
 				// fprintf(stderr, "  %d %10s %d %d\n", j-1, tmp[j-1].name, tmp[j-1].type, t->f[i].type);
 			}
 		}
 		t->n = sproto_obj_n;
 		t->f = tmp;
 
+		// log
 		for (i = 0; i < t->n; i++) {
 			fprintf(stderr, " %3d ", i);
 			struct sproto_field *f = &t->f[i];
-			fprintf(stderr, " %16s %6d  type %d\n", f->name, f->tag, f->type);
+			fprintf(stderr, " %16s %6d  type %5d %d\n", f->name, f->tag, f->type, (int)f->offset_for_obj);
 		}
 	}
 #endif
@@ -700,6 +733,11 @@ sproto_field(const struct sproto_type *st, const char * field_name) {
 		}
 	}
 	return NULL;
+}
+
+struct sproto_field *
+sproto_field_by_tag(const struct sproto_type *st, int tag) {
+	return findtag(st, tag);
 }
 
 // encode & decode
