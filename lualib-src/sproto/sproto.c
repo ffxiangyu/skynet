@@ -302,6 +302,7 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 #ifdef SPROTO_OBJ
 		f->offset_for_obj = c_struct_offset;
 		f->unit_for_arr = 0;
+		f->arr_idx = 0;
 		if (SPROTO_TINTEGER == f->type)
 			c_struct_offset += SIZEOF_INT64;
 		else if (SPROTO_TBOOLEAN == f->type)
@@ -373,12 +374,15 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 			tag_add = (tag_add / 1000 + 1) * 1000;
 		// _WorldObj_'s tag_add must be 0
 		;
+		int arr_idx = 0;
 		for (i = 0, j = 0; i < t->n; i++) {
 			struct sproto_field *f = &t->f[i];
 			if (SPROTO_TSTRUCT == f->type) {
 				// fprintf(stderr, " struct %s %d fields\n", f->st->name, f->st->n);
 				for (k = 0; k < f->st->n; k++) {
 					tmp[j].offset_for_obj = f->offset_for_obj + f->st->f[k].offset_for_obj;
+					if (SPROTO_TARRAY & tmp[j].type)
+						tmp[j].arr_idx = arr_idx++;
 					tmp[j++] = f->st->f[k];
 					// fprintf(stderr, "  %d %10s %d %d\n", j+k, tmp[j+k].name, tmp[j+k].type, f->st->f[k].type);
 				}
@@ -386,6 +390,8 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 				if (f->unit_for_arr < 0)
 					continue;
 				tmp[j] = t->f[i];
+				if (SPROTO_TARRAY & tmp[j].type)
+					tmp[j].arr_idx = arr_idx++;
 				tmp[j++].tag = t->f[i].tag + tag_add;
 				// fprintf(stderr, "  %d %10s %d %d\n", j-1, tmp[j-1].name, tmp[j-1].type, t->f[i].type);
 			}

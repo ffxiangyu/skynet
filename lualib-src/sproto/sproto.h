@@ -17,6 +17,7 @@ struct sproto_field {
 	size_t offset_for_obj;
 	int unit_for_arr; // how many elements make a data
 	                  // default 0, > 0 for arr, -1 for the xx_unit_for_arr field
+	int arr_idx; // the index in arr fields
 #endif
 };
 
