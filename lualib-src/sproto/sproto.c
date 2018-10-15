@@ -288,6 +288,7 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 	int c_struct_offset = 0;
 	int num_arr = 0;
 	int sproto_obj_n = n;
+	bool is_last_field_arr = false, is_unit_for_arr_field;
 #endif
 	maxn = n;
 	last = -1;
@@ -303,6 +304,26 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		f->offset_for_obj = c_struct_offset;
 		f->unit_for_arr = 0;
 		f->arr_idx = 0;
+		is_unit_for_arr_field = false;
+		if (is_last_field_arr) {
+			// if next field's name is this+_unit_for_arr
+			struct sproto_field *last_f = &t->f[i-1];
+			size_t name_len = strlen(f->name);
+			if (name_len > 13) {
+				char subbuff[14]; // _unit_for_arr 's len is 13
+				memcpy(subbuff, f->name + name_len - 13, 13);
+				subbuff[13] = '\0';
+				if (0 == strcmp(f->name, "_unit_for_arr")) {
+					last_f->unit_for_arr = f->tag;
+					sproto_obj_n--; // will not need the next field
+					f->unit_for_arr = -1;
+					is_unit_for_arr_field = true;
+				}
+			}
+			is_last_field_arr = false;
+		}
+		if (is_unit_for_arr_field)
+			continue;
 		if (SPROTO_TINTEGER == f->type)
 			c_struct_offset += SIZEOF_INT64;
 		else if (SPROTO_TBOOLEAN == f->type)
@@ -317,21 +338,6 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		else if (SPROTO_TARRAY & f->type) {
 			num_arr++;
 			f->unit_for_arr = 1; // default 1 for array, if no xx_unit_for_arr field
-			// if next field's name is this+_unit_for_arr
-			if (n > i + 1) {
-				struct sproto_field *next_f = &t->f[i+1];
-				size_t name_len = strlen(next_f->name);
-				if (name_len > 13) {
-					char subbuff[14]; // _unit_for_arr 's len is 13
-					memcpy(subbuff, next_f->name + name_len - 13, 13);
-					subbuff[13] = '\0';
-					if (0 == strcmp(next_f->name, "_unit_for_arr")) {
-						f->unit_for_arr = next_f->tag;
-						sproto_obj_n--; // will not need the next field
-						next_f->unit_for_arr = -1;
-					}
-				}
-			}
 		}
 		else {
 			fprintf(stderr, "sproto.c import_type ERROR unsupported field type %d", f->type); // error
