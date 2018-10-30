@@ -338,6 +338,7 @@ import_type(struct sproto *s, struct sproto_type *t, const uint8_t * stream) {
 		else if (SPROTO_TARRAY & f->type) {
 			num_arr++;
 			f->unit_for_arr = 1; // default 1 for array, if no xx_unit_for_arr field
+			is_last_field_arr = true;
 		}
 		else {
 			fprintf(stderr, "sproto.c import_type ERROR unsupported field type %d", f->type); // error
