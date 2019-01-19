@@ -123,34 +123,34 @@ function convert.type(all, obj)
 	for _, f in ipairs(obj[2]) do
 		if f.type == "field" then
 			local name = f[1]
-			if string.sub(name, -13, -1) ~= "_unit_for_arr" then
-				if names[name] then
-					error(string.format("redefine %s in type %s", name, typename))
-				end
-				names[name] = true
-				local tag = f[2]
+			if names[name] then
+				error(string.format("redefine %s in type %s", name, typename))
+			end
+			names[name] = true
+			local tag = f[2]
+			if string.sub(name, -13, -1) ~= "_unit_for_arr" then -- not unit_for_arr field then
 				if tags[tag] then
 					error(string.format("redefine tag %d in type %s", tag, typename))
 				end
 				tags[tag] = true
-				local field = { name = name, tag = tag }
-				table.insert(result, field)
-				local fieldtype = f[3]
-				if fieldtype == "*" then
-					field.array = true
-					fieldtype = f[4]
-				end
-				local mainkey = f[5]
-				if mainkey then
-					if fieldtype == "integer" then
-						field.decimal = mainkey
-					else
-						assert(field.array)
-						field.key = mainkey
-					end
-				end
-				field.typename = fieldtype
 			end
+			local field = { name = name, tag = tag }
+			table.insert(result, field)
+			local fieldtype = f[3]
+			if fieldtype == "*" then
+				field.array = true
+				fieldtype = f[4]
+			end
+			local mainkey = f[5]
+			if mainkey then
+				if fieldtype == "integer" then
+					field.decimal = mainkey
+				else
+					assert(field.array)
+					field.key = mainkey
+				end
+			end
+			field.typename = fieldtype
 		else
 			assert(f.type == "type")	-- nest type
 			local nesttypename = typename .. "." .. f[1]

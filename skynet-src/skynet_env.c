@@ -28,7 +28,6 @@ skynet_getenv(const char *key) {
 	SPIN_UNLOCK(E)
 
 	fprintf(stderr, "skynet_getenv %s = %s\n", key, result);
-	// fprintf(stderr, "skynet_getenv %s = %ld\n", key, (uint64_t)result);
 	return result;
 }
 

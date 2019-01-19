@@ -175,7 +175,9 @@ main(int argc, char *argv[]) {
 	agent_config.thread_num = optint("thread_num", 8);
 	agent_config.frame_ms = optint("frame_ms", 40);
 	agent_config.cache_ms = optint("cache_ms", 40);
+	agent_config.var_ms = optint("var_ms", 5);
 	agent_config.user_per_thread = optint("user_per_thread", 30);
+	agent_config.root_path = optstring("root", "/home/torchgames/cof_server");
 	optstring("logpath", "upf_agent/log");
 	optint("loglevel", 5);
 
@@ -188,8 +190,27 @@ main(int argc, char *argv[]) {
 	// start threads for update-per-frame operation
 	struct s_world_config world_config;
 	world_config.frame_ms = optint("frame_ms", 40);
+	world_config.root_path = optstring("root", "/home/torchgames/cof_server");
 	optstring("logpath", "s_world/log");
 	optint("loglevel", 5);
+	const char * debug_obj_ids_str = optstring("debug_obj_ids", "");
+	char *token, *str, *tofree;
+	tofree = str = strdup(debug_obj_ids_str);  // We own str's memory now.
+	int num_debug_objs = 0;
+	while ((token = strsep(&str, ","))) {
+		if (strlen(token) > 0)
+			num_debug_objs++;
+	}
+	free(tofree);
+	world_config.debug_objs_num = num_debug_objs;
+	world_config.debug_obj_ids = malloc(sizeof(uint64_t) * num_debug_objs);
+	tofree = str = strdup(debug_obj_ids_str);  // We own str's memory now.
+	num_debug_objs = 0;
+	while ((token = strsep(&str, ","))) {
+		if (strlen(token) > 0)
+			world_config.debug_obj_ids[num_debug_objs++] = atoll(token);
+	}
+	free(tofree);
 
 	s_world_start(&world_config);
 #endif
