@@ -180,6 +180,7 @@ main(int argc, char *argv[]) {
 	agent_config.root_path = optstring("root", "/home/torchgames/cof_server");
 	optstring("logpath", "upf_agent/log");
 	optint("loglevel", 5);
+	agent_config.test_push_users = optint("test_push_users", 0);
 
 	// (update per frame) for agent push data per server frame
 	upf_agent_start(&agent_config);
