@@ -256,7 +256,7 @@ expand_buffer(lua_State *L, int osz, int nsz) {
 		luaL_error(L, "object is too large (>%d)", ENCODE_MAXSIZE);
 		return NULL;
 	}
-	fprintf(stderr, "expand_buffer %d %d\n", osz, nsz);
+	fprintf(stderr, "expand_buffer -- %d %d\n", osz, nsz);
 	output = lua_newuserdata(L, osz);
 	lua_replace(L, lua_upvalueindex(1));
 	lua_pushinteger(L, osz);
